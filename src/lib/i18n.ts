@@ -9,7 +9,6 @@ export type Copy = {
   description: string
   documentTitle: string
   levelDocumentTitle: (level: string) => string
-  eyebrow: string
   title: string
   intro: string
   dropAria: string
@@ -46,6 +45,12 @@ export type Copy = {
   emptyLevel: string
   chooseLocation: string
   position: (current: number, total: number) => string
+  availableLabel: string
+  ofTotal: (count: number) => string
+  markHint: string
+  markedUsed: string
+  markUsed: (code: string) => string
+  unmarkUsed: (code: string) => string
   previous: string
   next: string
   levels: string
@@ -60,7 +65,6 @@ const da: Copy = {
   description: 'Filtrér ledige lokationer fra WMS og del listen med lageret.',
   documentTitle: 'Vis ledige lokationer · Imerco',
   levelDocumentTitle: (level) => `Niveau ${level} · Imerco`,
-  eyebrow: '20.SA.10',
   title: 'Vis ledige lokationer',
   intro: 'Læg WMS-filen her. Appen beholder gange 11, 12, 13, 14 og 17 på niveau 20, 30 og 40, og laver en liste til gulvet.',
   dropAria: 'Vælg Excel-fil',
@@ -103,6 +107,12 @@ const da: Copy = {
   emptyLevel: 'Ingen lokationer på dette niveau.',
   chooseLocation: 'Vælg en lokation',
   position: (current, total) => `${current} af ${total}`,
+  availableLabel: 'Ledige',
+  ofTotal: (count) => `af ${count} i alt`,
+  markHint: 'Tryk på cirklen, når lokationen er brugt.',
+  markedUsed: 'Brugt',
+  markUsed: (code) => `Markér ${code} som brugt`,
+  unmarkUsed: (code) => `Fjern markering fra ${code}`,
   previous: 'Forrige',
   next: 'Næste',
   levels: 'Niveauer',
@@ -117,7 +127,6 @@ const en: Copy = {
   description: 'Filter available warehouse locations from the WMS export and share the list with the floor.',
   documentTitle: 'Available locations · Imerco',
   levelDocumentTitle: (level) => `Level ${level} · Imerco`,
-  eyebrow: '20.SA.10',
   title: 'Available locations',
   intro: 'Drop the WMS file here. The app keeps aisles 11, 12, 13, 14 and 17 on levels 20, 30 and 40, and builds a list for the floor.',
   dropAria: 'Choose Excel file',
@@ -160,6 +169,12 @@ const en: Copy = {
   emptyLevel: 'No locations on this level.',
   chooseLocation: 'Choose a location',
   position: (current, total) => `${current} of ${total}`,
+  availableLabel: 'Available',
+  ofTotal: (count) => `of ${count} total`,
+  markHint: 'Tap the circle when a location has been used.',
+  markedUsed: 'Used',
+  markUsed: (code) => `Mark ${code} as used`,
+  unmarkUsed: (code) => `Unmark ${code}`,
   previous: 'Previous',
   next: 'Next',
   levels: 'Levels',

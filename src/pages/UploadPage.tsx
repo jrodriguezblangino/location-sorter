@@ -121,10 +121,11 @@ export function UploadPage() {
   return (
     <div className="min-h-svh">
       <SiteHeader />
-      <main id="indhold" className="mx-auto max-w-5xl px-5 py-10 sm:py-14">
-        <p className="text-sm font-medium tracking-[0.16em] text-muted uppercase">{t.eyebrow}</p>
-        <h1 className="mt-2 max-w-3xl text-4xl font-medium tracking-tight sm:text-5xl">{t.title}</h1>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted">{t.intro}</p>
+      <main id="indhold" className="mx-auto max-w-5xl px-5 py-12 sm:py-16">
+        <div className="max-w-2xl">
+          <h1 className="text-[2.75rem] font-medium leading-[1.02] tracking-[-0.035em] text-balance sm:text-6xl">{t.title}</h1>
+          <p className="mt-6 border-l-2 border-brand pl-4 text-lg font-normal leading-relaxed text-ink">{t.intro}</p>
+        </div>
 
         <div className="mt-8">
           <DropZone disabled={state.kind === 'reading'} onFile={(file) => void readFile(file)} />

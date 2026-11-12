@@ -6,6 +6,18 @@ import { LEVELS, type Level } from '../lib/filterLocations.ts'
 import { useLanguage } from '../lib/LanguageProvider.tsx'
 import { decodeLocations } from '../lib/sharePayload.ts'
 
+function readUsed(key: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) return new Set()
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return new Set()
+    return new Set(parsed.filter((item) => typeof item === 'string'))
+  } catch {
+    return new Set()
+  }
+}
+
 export function MobilePage() {
   const { t } = useLanguage()
   const { payload = '' } = useParams()
@@ -17,9 +29,25 @@ export function MobilePage() {
     }
   }, [payload])
 
+  const storageKey = `imerco-used:${payload}`
+  const [used, setUsed] = useState<Set<string>>(() => readUsed(storageKey))
   const [level, setLevel] = useState<Level | null>(null)
   const [index, setIndex] = useState(-1)
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const seenKey = useRef(storageKey)
+
+  if (seenKey.current !== storageKey) {
+    seenKey.current = storageKey
+    setUsed(readUsed(storageKey))
+  }
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify([...used]))
+    } catch {
+      /* private mode */
+    }
+  }, [storageKey, used])
 
   const counts = useMemo(() => {
     return {
@@ -29,7 +57,19 @@ export function MobilePage() {
     }
   }, [decoded.locations])
 
+  const openCounts = useMemo(() => {
+    const tally = { '20': 0, '30': 0, '40': 0 }
+    for (const code of decoded.locations) {
+      if (used.has(code)) continue
+      if (code.endsWith('-20')) tally['20'] += 1
+      else if (code.endsWith('-30')) tally['30'] += 1
+      else if (code.endsWith('-40')) tally['40'] += 1
+    }
+    return tally
+  }, [decoded.locations, used])
+
   const list = level ? decoded.locations.filter((code) => code.endsWith(`-${level}`)) : []
+  const openTotal = openCounts['20'] + openCounts['30'] + openCounts['40']
 
   useEffect(() => {
     if (index < 0) return
@@ -46,13 +86,22 @@ export function MobilePage() {
     setIndex(-1)
   }
 
+  function toggleUsed(code: string) {
+    setUsed((current) => {
+      const next = new Set(current)
+      if (next.has(code)) next.delete(code)
+      else next.add(code)
+      return next
+    })
+  }
+
   if (!decoded.ok) {
     return (
       <div className="min-h-svh">
         <SiteHeader />
         <main id="indhold" className="mx-auto max-w-lg px-5 py-16">
-          <h1 className="text-3xl font-medium tracking-tight">{t.badLinkTitle}</h1>
-          <p className="mt-3 text-base leading-relaxed text-muted">{t.badLinkBody}</p>
+          <h1 className="text-3xl font-medium tracking-[-0.03em]">{t.badLinkTitle}</h1>
+          <p className="mt-3 border-l-2 border-brand pl-4 text-base font-normal leading-relaxed">{t.badLinkBody}</p>
         </main>
       </div>
     )
@@ -72,27 +121,35 @@ export function MobilePage() {
                     type="button"
                     aria-pressed={item === level}
                     onClick={() => openLevel(item)}
-                    className={`min-h-12 rounded-full text-base font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
+                    className={`pressable min-h-14 rounded-2xl px-2 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
                       item === level ? 'bg-ink text-white' : 'bg-white ring-1 ring-line'
                     }`}
                   >
-                    {item}
-                    <span className="ml-1 font-mono text-sm">{counts[item]}</span>
+                    <span className="block text-base font-medium">{item}</span>
+                    <span className={`mt-0.5 block text-xs ${item === level ? 'text-white/75' : 'text-muted'}`}>
+                      <span className="font-mono text-sm">{openCounts[item]}</span> {t.availableLabel.toLowerCase()}
+                    </span>
                   </button>
                 ))}
               </div>
             </div>
-            <section aria-labelledby="list-heading" className="px-5 pt-5">
-              <h1 id="list-heading" className="text-3xl font-medium tracking-tight">
+            <section aria-labelledby="list-heading" className="px-5 pt-6">
+              <h1 id="list-heading" className="text-3xl font-medium tracking-[-0.03em]">
                 {t.level(level)}
               </h1>
-              <p className="mt-1 text-base text-muted">{t.locationCount(list.length)}</p>
+              <p className="mt-3 text-sm text-muted">
+                <span className="font-mono text-2xl font-medium text-ink">{openCounts[level]}</span>
+                <span className="ml-2">{t.availableLabel.toLowerCase()}</span>
+                <span className="ml-2">{t.ofTotal(counts[level])}</span>
+              </p>
+              <p className="mt-2 text-sm text-muted">{t.markHint}</p>
               {list.length === 0 ? (
                 <p className="mt-8 text-base">{t.emptyLevel}</p>
               ) : (
                 <ol className="mt-4 overflow-hidden rounded-3xl bg-white">
                   {list.map((code, itemIndex) => {
                     const selected = itemIndex === index
+                    const isUsed = used.has(code)
                     const aisle = code.slice(0, 2)
                     const showAisle = itemIndex === 0 || list[itemIndex - 1]?.slice(0, 2) !== aisle
                     return (
@@ -102,22 +159,49 @@ export function MobilePage() {
                             {t.aisle(aisle)}
                           </p>
                         ) : null}
-                        <button
-                          type="button"
-                          ref={(node) => {
-                            itemRefs.current[itemIndex] = node
-                          }}
-                          aria-current={selected ? 'true' : undefined}
-                          onClick={() => setIndex(itemIndex)}
-                          className={`location-row flex min-h-14 w-full items-center justify-between px-4 text-left font-mono text-xl focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand ${
-                            selected ? 'bg-ink text-white' : 'bg-white'
-                          }`}
-                        >
-                          <span>{code}</span>
-                          {selected ? (
-                            <span className="font-sans text-sm tracking-[0.14em] text-brand uppercase">{t.selected}</span>
-                          ) : null}
-                        </button>
+                        <div className={`flex items-stretch ${selected ? '' : isUsed ? 'bg-[#f6f3ee]' : 'bg-white'}`}>
+                          <button
+                            type="button"
+                            ref={(node) => {
+                              itemRefs.current[itemIndex] = node
+                            }}
+                            aria-current={selected ? 'true' : undefined}
+                            onClick={() => setIndex(itemIndex)}
+                            className={`location-row pressable flex min-h-14 flex-1 items-center justify-between px-4 text-left font-mono text-xl focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand ${
+                              selected ? 'bg-ink text-white' : isUsed ? 'text-muted' : 'bg-white text-ink'
+                            }`}
+                          >
+                            <span className={isUsed && !selected ? 'line-through decoration-1' : undefined}>{code}</span>
+                            {selected ? (
+                              <span className="font-sans text-sm tracking-[0.14em] text-brand uppercase">{t.selected}</span>
+                            ) : isUsed ? (
+                              <span className="font-sans text-sm tracking-[0.14em] uppercase">{t.markedUsed}</span>
+                            ) : null}
+                          </button>
+                          <button
+                            type="button"
+                            aria-pressed={isUsed}
+                            aria-label={isUsed ? t.unmarkUsed(code) : t.markUsed(code)}
+                            onClick={() => toggleUsed(code)}
+                            className={`pressable flex w-14 shrink-0 items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand ${
+                              selected ? 'bg-ink' : 'bg-transparent'
+                            }`}
+                          >
+                            <span
+                              className={`grid h-7 w-7 place-items-center rounded-full border ${
+                                isUsed
+                                  ? 'border-brand bg-brand text-ink'
+                                  : selected
+                                    ? 'border-white/40 text-transparent'
+                                    : 'border-ink/20 text-transparent'
+                              }`}
+                            >
+                              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" aria-hidden="true">
+                                <path d="M3.5 8.2 6.4 11l6.1-6.2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </span>
+                          </button>
+                        </div>
                       </li>
                     )
                   })}
@@ -154,25 +238,31 @@ export function MobilePage() {
           </>
         ) : (
           <section aria-labelledby="levels-heading" className="px-5 pt-8">
-            <h1 id="levels-heading" className="text-4xl font-medium tracking-tight">
+            <h1 id="levels-heading" className="text-[2.5rem] font-medium leading-none tracking-[-0.035em]">
               {t.mobileTitle}
             </h1>
-            <p className="mt-2 text-base text-muted">{t.locationCount(decoded.locations.length)}</p>
-            <div className="mt-6 grid gap-3">
+            <p className="mt-4 max-w-xs border-l-2 border-brand pl-4">
+              <span className="block font-mono text-3xl font-medium tracking-tight text-ink">{openTotal}</span>
+              <span className="mt-1 block text-sm font-normal text-muted">
+                {t.availableLabel.toLowerCase()} {t.ofTotal(decoded.locations.length)}
+              </span>
+            </p>
+            <div className="mt-8 grid gap-3">
               {LEVELS.map((item) => (
                 <button
                   key={item}
                   type="button"
                   onClick={() => openLevel(item)}
-                  className="flex min-h-28 items-center justify-between rounded-3xl border-t-4 border-brand bg-white px-5 py-5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                  className="pressable flex min-h-28 items-center justify-between rounded-3xl border-t-4 border-brand bg-white px-5 py-5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                 >
                   <span>
                     <span className="block text-sm tracking-[0.14em] text-muted uppercase">{t.levelWord}</span>
-                    <span className="mt-1 block text-4xl font-medium">{item}</span>
+                    <span className="mt-1 block text-4xl font-medium tracking-[-0.03em]">{item}</span>
                   </span>
                   <span className="text-right">
-                    <span className="block font-mono text-4xl font-medium">{counts[item]}</span>
-                    <span className="text-sm text-muted">{t.locationWord(counts[item])}</span>
+                    <span className="block text-xs tracking-[0.14em] text-muted uppercase">{t.availableLabel}</span>
+                    <span className="mt-1 block font-mono text-4xl font-medium tracking-tight">{openCounts[item]}</span>
+                    <span className="text-sm text-muted">{t.ofTotal(counts[item])}</span>
                   </span>
                 </button>
               ))}

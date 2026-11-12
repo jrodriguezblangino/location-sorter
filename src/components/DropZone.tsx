@@ -53,8 +53,8 @@ export function DropZone({ disabled = false, onFile }: Props) {
         setActive(false)
         take(event.dataTransfer.files[0])
       }}
-      className={`flex min-h-52 w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border border-dashed px-6 py-10 text-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand ${
-        active ? 'border-brand bg-white' : 'border-ink/20 bg-white/70'
+      className={`pressable flex min-h-52 w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border border-dashed px-6 py-10 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand ${
+        active ? 'border-brand bg-white' : 'border-ink/15 bg-white'
       } ${disabled ? 'cursor-wait opacity-70' : ''}`}
     >
       <input
@@ -75,8 +75,8 @@ export function DropZone({ disabled = false, onFile }: Props) {
           <path d="M5 16.5V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5" strokeLinecap="round" />
         </svg>
       </span>
-      <span className="text-xl font-medium">{t.dropTitle}</span>
-      <span className="text-base text-muted">{t.dropHint}</span>
+      <span className="text-xl font-medium tracking-tight">{t.dropTitle}</span>
+      <span className="max-w-sm text-base font-normal leading-relaxed text-muted">{t.dropHint}</span>
     </div>
   )
 }

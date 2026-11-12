@@ -7,5 +7,5 @@ const variants: Record<Variant, string> = {
 }
 
 export function controlClass(variant: Variant = 'primary', className = ''): string {
-  return `inline-flex min-h-12 items-center justify-center rounded-full px-5 text-base font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-40 ${variants[variant]} ${className}`
+  return `pressable inline-flex min-h-12 items-center justify-center rounded-full px-5 text-base font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-40 ${variants[variant]} ${className}`
 }
