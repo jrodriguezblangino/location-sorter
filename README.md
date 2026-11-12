@@ -16,8 +16,8 @@ La app queda en `http://localhost:5173`.
 
 ## GitHub Pages
 
-1. Crea un repositorio y sube esta carpeta a la rama `main`.
-2. En el repositorio: Settings → Pages → Build and deployment → Source: **GitHub Actions**.
-3. El workflow `.github/workflows/pages.yml` publica el build en cada push a `main`.
+La app publicada: https://jrodriguezblangino.github.io/location-sorter/
+
+En Settings → Pages → Build and deployment, el origen tiene que ser **GitHub Actions**. Si no está activado, el paso `deploy-pages` falla con 404. El workflow `.github/workflows/pages.yml` publica el build en cada push a `main`.
 
 El código de la app es público. Los Excel no se guardan en el repositorio. Quien tenga el enlace del QR ve solo los códigos de esa subida.
