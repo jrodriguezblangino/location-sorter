@@ -2,7 +2,7 @@
 
 Herramienta interna para filtrar el Excel de ubicaciones libres del WMS y pasarle la lista al almacén con un QR.
 
-Se queda con los pasillos **11, 12, 13, 14 y 17** en los niveles **20, 30 y 40**. El archivo no sale del navegador: no hay servidor. El QR lleva las ubicaciones dentro del enlace, así que cada subida genera un código nuevo.
+Se queda con los pasillos **11, 12, 13, 14 y 17** en los niveles **20, 30 y 40**. El archivo no sale del navegador: no hay servidor. El QR lleva las ubicaciones dentro del enlace, así que cada subida genera un código nuevo. En la barra superior se elige **Dansk** o **English**; el enlace del QR abre el móvil en ese idioma.
 
 ## En local
 
